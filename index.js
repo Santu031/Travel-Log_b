@@ -5,7 +5,19 @@ require("dotenv").config();
 
 const app = express();
 
-app.use(cors({ origin: true, credentials: true }));
+// Configure CORS for Vercel deployment
+const corsOptions = {
+  origin: [
+    "http://localhost:8081",
+    "http://localhost:8080",
+    "http://localhost:3000",
+    "https://*.vercel.app"  // Allow all Vercel deployments
+  ],
+  credentials: true,
+  optionsSuccessStatus: 200
+};
+
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '25mb' }));
 app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 
@@ -23,17 +35,25 @@ const galleryRoutes = require("./routes/gallery");
 app.use("/api/gallery", galleryRoutes);
 const reviewRoutes = require("./routes/reviews");
 app.use("/api/reviews", reviewRoutes);
-app.use((req, res) => {
-  console.log(`404 - Route not found: ${req.method} ${req.path}`);
-  res.status(404).json({ error: "Not found" });
+
+// Handle 404 for API routes
+app.use("/api/*", (req, res) => {
+  res.status(404).json({ error: "API endpoint not found" });
 });
 
-const PORT = process.env.PORT;
-const MONGO_URI = process.env.MONGO_URI;
-mongoose.connect(MONGO_URI)
-  .then(() => console.log(`✅ MongoDB connected`))
-  .catch(err => console.error("❌ MongoDB connection error:", err));
+// For Vercel, we need to export the app
+module.exports = app;
 
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-});
+// Only start the server if this file is run directly (not in Vercel)
+if (require.main === module) {
+  const PORT = process.env.PORT || 3001;
+  const MONGO_URI = process.env.MONGO_URI;
+  
+  mongoose.connect(MONGO_URI)
+    .then(() => console.log(`✅ MongoDB connected`))
+    .catch(err => console.error("❌ MongoDB connection error:", err));
+  
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+  });
+}
