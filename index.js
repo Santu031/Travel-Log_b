@@ -11,7 +11,8 @@ const corsOptions = {
     "http://localhost:8081",
     "http://localhost:8080",
     "http://localhost:3000",
-    "https://*.vercel.app"  // Allow all Vercel deployments
+    "https://travel-log-f.vercel.app",  // Explicitly allow your frontend
+    "https://*.vercel.app"  // Allow all Vercel deployments (fallback)
   ],
   credentials: true,
   optionsSuccessStatus: 200
@@ -25,6 +26,11 @@ app.get("/", (req, res) => {
   res.send("✅ Backend is working");
 });
 
+// Add a simple test endpoint to verify routing is working
+app.get("/api/test", (req, res) => {
+  res.json({ message: "API routing is working correctly" });
+});
+
 const authRoutes = require("./routes/auth");
 app.use("/api/auth", authRoutes);
 const travelRoutes = require("./routes/travel");
@@ -35,11 +41,6 @@ const galleryRoutes = require("./routes/gallery");
 app.use("/api/gallery", galleryRoutes);
 const reviewRoutes = require("./routes/reviews");
 app.use("/api/reviews", reviewRoutes);
-
-// Handle 404 for API routes
-app.use("/api/*", (req, res) => {
-  res.status(404).json({ error: "API endpoint not found" });
-});
 
 // For Vercel, we need to export the app
 module.exports = app;

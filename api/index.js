@@ -11,6 +11,9 @@ module.exports = (req, res) => {
     return;
   }
   
+  // Log the request for debugging
+  console.log(`Request: ${req.method} ${req.url}`);
+  
   // Pass the request to the Express app
   return app(req, res);
 };
