@@ -31,16 +31,46 @@ app.get("/api/test", (req, res) => {
   res.json({ message: "API routing is working correctly" });
 });
 
-const authRoutes = require("./routes/auth");
-app.use("/api/auth", authRoutes);
-const travelRoutes = require("./routes/travel");
-app.use("/api/travel", travelRoutes);
-const aiRoutes = require("./routes/ai");
-app.use("/api/ai", aiRoutes);
-const galleryRoutes = require("./routes/gallery");
-app.use("/api/gallery", galleryRoutes);
-const reviewRoutes = require("./routes/reviews");
-app.use("/api/reviews", reviewRoutes);
+// Test if routes are being imported correctly
+try {
+  const authRoutes = require("./routes/auth");
+  console.log("Auth routes imported successfully");
+  app.use("/api/auth", authRoutes);
+} catch (error) {
+  console.error("Error importing auth routes:", error);
+}
+
+try {
+  const travelRoutes = require("./routes/travel");
+  console.log("Travel routes imported successfully");
+  app.use("/api/travel", travelRoutes);
+} catch (error) {
+  console.error("Error importing travel routes:", error);
+}
+
+try {
+  const aiRoutes = require("./routes/ai");
+  console.log("AI routes imported successfully");
+  app.use("/api/ai", aiRoutes);
+} catch (error) {
+  console.error("Error importing AI routes:", error);
+}
+
+try {
+  const galleryRoutes = require("./routes/gallery");
+  console.log("Gallery routes imported successfully");
+  app.use("/api/gallery", galleryRoutes);
+} catch (error) {
+  console.error("Error importing gallery routes:", error);
+}
+
+try {
+  const reviewRoutes = require("./routes/reviews");
+  console.log("Review routes imported successfully");
+  app.use("/api/reviews", reviewRoutes);
+} catch (error) {
+  console.error("Error importing review routes:", error);
+}
 
 // For Vercel, we need to export the app
 module.exports = app;
