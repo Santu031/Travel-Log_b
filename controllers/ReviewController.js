@@ -1,3 +1,4 @@
+const { default: connectDB } = require("../db");
 const Review = require("../models/Review");
 
 class ReviewController {
@@ -23,6 +24,7 @@ class ReviewController {
 
   // Read all
   static async getAllReviews(req, res) {
+    await connectDB();
     try {
       // Build query based on filters
       const query = {};
