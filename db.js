@@ -4,12 +4,12 @@ const dotenv = require('dotenv');
 // Ensure dotenv is loaded
 dotenv.config();
 
-const MONGO_URI = process.env.MONGODB_URI;
+const MONGO_URI = process.env.MONGO_URI;
 let cachedDb = null;
 
 const connectDB = async () => {
   if (!MONGO_URI) {
-    throw new Error('MONGODB_URI is not defined in environment variables');
+    throw new Error('MONGO_URI is not defined in environment variables');
   }
   
   if (cachedDb && mongoose.connection.readyState === 1) {
