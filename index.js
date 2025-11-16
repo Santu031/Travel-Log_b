@@ -28,16 +28,22 @@ console.log("MONGO_URI:", MONGO_URI ? "Present" : "Missing");
 
 // Prevent multiple connections in serverless environment
 if (MONGO_URI) {
-  // Check if we're already connected
+  // Check if we're already connected or connecting
   if (mongoose.connection.readyState === 0) {
+    console.log("Attempting to connect to MongoDB...");
     mongoose.connect(MONGO_URI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000, // Timeout after 5 seconds
+      socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
     })
     .then(() => console.log(`✅ MongoDB connected`))
-    .catch(err => console.error("❌ MongoDB connection error:", err));
+    .catch(err => {
+      console.error("❌ MongoDB connection error:", err);
+      // Don't throw error here as it might crash the serverless function
+    });
   } else {
-    console.log("✅ MongoDB already connected");
+    console.log("✅ MongoDB connection state:", mongoose.connection.readyState);
   }
 } else {
   console.error("❌ MONGO_URI not found in environment variables");
@@ -49,7 +55,10 @@ app.get("/", (req, res) => {
 
 // Add a simple test endpoint to verify routing is working
 app.get("/api/test", (req, res) => {
-  res.json({ message: "API routing is working correctly" });
+  res.json({ 
+    message: "API routing is working correctly",
+    mongoConnectionState: mongoose.connection.readyState
+  });
 });
 
 // Import and mount routes directly without try/catch blocks

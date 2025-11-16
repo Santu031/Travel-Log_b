@@ -1,7 +1,10 @@
 const app = require('../index.js');
 
+// Keep track of MongoDB connection state
+let isConnecting = false;
+
 // Vercel serverless function handler
-module.exports = (req, res) => {
+module.exports = async (req, res) => {
   // Set CORS headers for preflight requests
   if (req.method === 'OPTIONS') {
     res.setHeader('Access-Control-Allow-Origin', '*');
