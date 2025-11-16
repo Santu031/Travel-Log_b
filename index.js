@@ -22,13 +22,23 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '25mb' }));
 app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 
-// Connect to MongoDB - this should work in both local and Vercel environments
+// MongoDB connection with better handling for Vercel serverless environment
 const MONGO_URI = process.env.MONGO_URI;
 console.log("MONGO_URI:", MONGO_URI ? "Present" : "Missing");
+
+// Prevent multiple connections in serverless environment
 if (MONGO_URI) {
-  mongoose.connect(MONGO_URI)
+  // Check if we're already connected
+  if (mongoose.connection.readyState === 0) {
+    mongoose.connect(MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    })
     .then(() => console.log(`✅ MongoDB connected`))
     .catch(err => console.error("❌ MongoDB connection error:", err));
+  } else {
+    console.log("✅ MongoDB already connected");
+  }
 } else {
   console.error("❌ MONGO_URI not found in environment variables");
 }
