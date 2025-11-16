@@ -4,11 +4,11 @@ const dotenv = require('dotenv');
 // Ensure dotenv is loaded
 dotenv.config();
 
-const MONGODB_URI = process.env.MONGODB_URI;
+const MONGO_URI = process.env.MONGODB_URI;
 let cachedDb = null;
 
 const connectDB = async () => {
-  if (!MONGODB_URI) {
+  if (!MONGO_URI) {
     throw new Error('MONGODB_URI is not defined in environment variables');
   }
   
@@ -16,7 +16,7 @@ const connectDB = async () => {
     return cachedDb;
   }
   try {
-    const db = await mongoose.connect(MONGODB_URI, {
+    const db = await mongoose.connect(MONGO_URI, {
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
     });
