@@ -12,6 +12,7 @@ const corsOptions = {
     "http://localhost:8080",
     "http://localhost:3000",
     "https://travel-log-f.vercel.app",  // Explicitly allow your frontend
+    "https://e-commerce-f-8qn1-peyptq5x0.vercel.app",  // Add the specific frontend URL causing issues
     "https://*.vercel.app"  // Allow all Vercel deployments (fallback)
   ],
   credentials: true,
