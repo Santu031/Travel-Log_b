@@ -24,6 +24,7 @@ app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 
 // Connect to MongoDB - this should work in both local and Vercel environments
 const MONGO_URI = process.env.MONGO_URI;
+console.log("MONGO_URI:", MONGO_URI ? "Present" : "Missing");
 if (MONGO_URI) {
   mongoose.connect(MONGO_URI)
     .then(() => console.log(`✅ MongoDB connected`))
@@ -41,46 +42,26 @@ app.get("/api/test", (req, res) => {
   res.json({ message: "API routing is working correctly" });
 });
 
-// Test if routes are being imported correctly
-try {
-  const authRoutes = require("./routes/auth");
-  console.log("Auth routes imported successfully");
-  app.use("/api/auth", authRoutes);
-} catch (error) {
-  console.error("Error importing auth routes:", error);
-}
+// Import and mount routes directly without try/catch blocks
+const authRoutes = require("./routes/auth");
+console.log("Mounting auth routes at /api/auth");
+app.use("/api/auth", authRoutes);
 
-try {
-  const travelRoutes = require("./routes/travel");
-  console.log("Travel routes imported successfully");
-  app.use("/api/travel", travelRoutes);
-} catch (error) {
-  console.error("Error importing travel routes:", error);
-}
+const travelRoutes = require("./routes/travel");
+console.log("Mounting travel routes at /api/travel");
+app.use("/api/travel", travelRoutes);
 
-try {
-  const aiRoutes = require("./routes/ai");
-  console.log("AI routes imported successfully");
-  app.use("/api/ai", aiRoutes);
-} catch (error) {
-  console.error("Error importing AI routes:", error);
-}
+const aiRoutes = require("./routes/ai");
+console.log("Mounting AI routes at /api/ai");
+app.use("/api/ai", aiRoutes);
 
-try {
-  const galleryRoutes = require("./routes/gallery");
-  console.log("Gallery routes imported successfully");
-  app.use("/api/gallery", galleryRoutes);
-} catch (error) {
-  console.error("Error importing gallery routes:", error);
-}
+const galleryRoutes = require("./routes/gallery");
+console.log("Mounting gallery routes at /api/gallery");
+app.use("/api/gallery", galleryRoutes);
 
-try {
-  const reviewRoutes = require("./routes/reviews");
-  console.log("Review routes imported successfully");
-  app.use("/api/reviews", reviewRoutes);
-} catch (error) {
-  console.error("Error importing review routes:", error);
-}
+const reviewRoutes = require("./routes/reviews");
+console.log("Mounting review routes at /api/reviews");
+app.use("/api/reviews", reviewRoutes);
 
 // For Vercel, we need to export the app
 module.exports = app;
