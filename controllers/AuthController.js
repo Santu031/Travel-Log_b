@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const connectDB = require("../db");
 
 // Secret key for JWT - in production, use environment variable
 const JWT_SECRET = process.env.JWT_SECRET || "travellog_jwt_secret_key";
@@ -9,6 +10,7 @@ class AuthController {
   // POST /api/auth/register
   static async register(req, res) {
     try {
+      await connectDB();
       const { name, email, password } = req.body;
       console.log("Register request:", { name, email, password });
       
@@ -55,6 +57,7 @@ class AuthController {
   // POST /api/auth/login
   static async login(req, res) {
     try {
+      await connectDB();
       const { email, password } = req.body;
       console.log("Login request:", { email, password });
       
@@ -104,6 +107,7 @@ class AuthController {
   // PUT /api/auth/profile - Update user profile including avatar
   static async updateProfile(req, res) {
     try {
+      await connectDB();
       const { name, avatar } = req.body;
       const email = req.user?.email;
 

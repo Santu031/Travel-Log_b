@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const Photo = require("../models/Photo");
 const Friend = require("../models/Friend");
+const connectDB = require("../db");
 
 function escapeRegExp(str = "") {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -35,6 +36,7 @@ class GalleryController {
   // Photos
   static async getPhotos(req, res) {
     try {
+      await connectDB();
       const email = (req.query.email || "").toLowerCase();
       const user = await getUserByEmail(email);
       if (!user) return res.json([]);
@@ -47,6 +49,7 @@ class GalleryController {
 
   static async createPhoto(req, res) {
     try {
+      await connectDB();
       const { email, dataUrl, caption, location, tags } = req.body || {};
       if (!email || !dataUrl) return res.status(400).json({ message: "email and dataUrl required" });
       const user = await getUserByEmail(email);
@@ -74,6 +77,7 @@ class GalleryController {
 
   static async deletePhoto(req, res) {
     try {
+      await connectDB();
       const id = req.params.id;
       await Photo.deleteOne({ _id: id });
       res.json({ message: "Deleted" });
@@ -85,6 +89,7 @@ class GalleryController {
   // Posts (photos formatted as posts)
   static async getPosts(req, res) {
     try {
+      await connectDB();
       // Get all photos with their users
       const photos = await Photo.find().sort({ createdAt: -1 }).populate('user');
       const posts = photos.map(photo => photoToPost(photo, photo.user));
@@ -97,6 +102,7 @@ class GalleryController {
 
   static async getTrendingPosts(req, res) {
     try {
+      await connectDB();
       // Get recent photos with their users
       const photos = await Photo.find().sort({ createdAt: -1 }).limit(10).populate('user');
       const posts = photos.map(photo => photoToPost(photo, photo.user));
@@ -110,6 +116,7 @@ class GalleryController {
   // Friends
   static async getFriends(req, res) {
     try {
+      await connectDB();
       const email = (req.query.email || "").toLowerCase();
       const user = await getUserByEmail(email);
       if (!user) return res.json([]);
@@ -122,6 +129,7 @@ class GalleryController {
 
   static async addFriend(req, res) {
     try {
+      await connectDB();
       const { email, friendEmail } = req.body || {};
       if (!email || !friendEmail) return res.status(400).json({ message: "email and friendEmail required" });
       const user = await getUserByEmail(email);
@@ -140,6 +148,7 @@ class GalleryController {
 
   static async removeFriend(req, res) {
     try {
+      await connectDB();
       const { email, friendEmail } = req.body || {};
       const user = await getUserByEmail(email);
       const friendUser = await getUserByEmail(friendEmail);
@@ -154,6 +163,7 @@ class GalleryController {
   // Friend profile (with photos)
   static async getFriendProfile(req, res) {
     try {
+      await connectDB();
       const email = (req.query.email || "").toLowerCase();
       const user = await getUserByEmail(email);
       if (!user) return res.status(404).json({ message: "User not found" });
@@ -176,6 +186,7 @@ class GalleryController {
   // Get all users for search functionality
   static async getAllUsers(req, res) {
     try {
+      await connectDB();
       const { search } = req.query;
       let query = {};
       

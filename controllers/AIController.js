@@ -1,9 +1,11 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
+const connectDB = require("../db");
 
 class AIController {
   // AI Search endpoint (Gemini) - returns structured JSON array
   static async aiSearch(req, res) {
     try {
+      await connectDB();
       const { query } = req.body || {};
       const geminiKey = process.env.KEY;
 
@@ -54,6 +56,7 @@ class AIController {
   // AI Recommendations endpoint (Gemini only)
   static async aiRecommendations(req, res) {
     try {
+      await connectDB();
       console.log('AI Recommendations request received:', JSON.stringify(req.body, null, 2));
       const { place, duration, interests, budget } = req.body || {};
       const geminiKey = process.env.KEY;

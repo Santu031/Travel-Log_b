@@ -1,10 +1,12 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
+const connectDB = require("../db");
 
 const JWT_SECRET = process.env.JWT_SECRET || "travellog_jwt_secret_key";
 
 const auth = async (req, res, next) => {
   try {
+    await connectDB();
     const token = req.header("Authorization")?.replace("Bearer ", "");
     
     if (!token) {

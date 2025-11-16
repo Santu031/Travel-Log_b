@@ -1,10 +1,11 @@
-const { default: connectDB } = require("../db");
+const connectDB = require("../db");
 const Review = require("../models/Review");
 
 class ReviewController {
   // Create
   static async createReview(req, res) {
     try {
+      await connectDB();
       const review = new Review({
         author: req.body.author || "Anonymous",
         avatar: req.body.avatar || null,
@@ -24,8 +25,8 @@ class ReviewController {
 
   // Read all
   static async getAllReviews(req, res) {
-    await connectDB();
     try {
+      await connectDB();
       // Build query based on filters
       const query = {};
       
@@ -52,6 +53,7 @@ class ReviewController {
   // Increment helpful
   static async incrementHelpful(req, res) {
     try {
+      await connectDB();
       const updated = await Review.findByIdAndUpdate(
         req.params.id,
         { $inc: { helpful: 1 } },
@@ -67,6 +69,7 @@ class ReviewController {
   // Delete
   static async deleteReview(req, res) {
     try {
+      await connectDB();
       const deleted = await Review.findByIdAndDelete(req.params.id);
       if (!deleted) return res.status(404).json({ message: "Not found" });
       res.json({ message: "Deleted" });
