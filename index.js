@@ -5,16 +5,9 @@ require("dotenv").config();
 
 const app = express();
 
-// Configure CORS for Vercel deployment
+// Configure CORS for Vercel deployment - more permissive for debugging
 const corsOptions = {
-  origin: [
-    "http://localhost:8081",
-    "http://localhost:8080",
-    "http://localhost:3000",
-    "https://travel-log-f.vercel.app",  // Explicitly allow your frontend
-    "https://e-commerce-f-8qn1-peyptq5x0.vercel.app",  // Add the specific frontend URL causing issues
-    "https://*.vercel.app"  // Allow all Vercel deployments (fallback)
-  ],
+  origin: true, // Allow any origin for debugging
   credentials: true,
   optionsSuccessStatus: 200
 };
