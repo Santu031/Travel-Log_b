@@ -1,9 +1,11 @@
 const TravelLog = require("../models/TravelLog");
+const connectDB = require("../db");
 
 class TravelController {
   // Create
   static async createTravelLog(req, res) {
     try {
+      await connectDB();
       const travelLog = new TravelLog(req.body);
       const saved = await travelLog.save();
       res.status(201).json(saved);
@@ -15,6 +17,7 @@ class TravelController {
   // Read all
   static async getAllTravelLogs(_req, res) {
     try {
+      await connectDB();
       const list = await TravelLog.find().sort({ createdAt: -1 });
       res.json(list);
     } catch (err) {
@@ -25,6 +28,7 @@ class TravelController {
   // Read one
   static async getTravelLogById(req, res) {
     try {
+      await connectDB();
       const item = await TravelLog.findById(req.params.id);
       if (!item) return res.status(404).json({ message: "Not found" });
       res.json(item);
@@ -36,6 +40,7 @@ class TravelController {
   // Update
   static async updateTravelLog(req, res) {
     try {
+      await connectDB();
       const updated = await TravelLog.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
       if (!updated) return res.status(404).json({ message: "Not found" });
       res.json(updated);
@@ -47,6 +52,7 @@ class TravelController {
   // Delete
   static async deleteTravelLog(req, res) {
     try {
+      await connectDB();
       const deleted = await TravelLog.findByIdAndDelete(req.params.id);
       if (!deleted) return res.status(404).json({ message: "Not found" });
       res.json({ message: "Deleted" });
