@@ -5,9 +5,16 @@ require("dotenv").config();
 
 const app = express();
 
-// Configure CORS for Vercel deployment - more permissive for debugging
+// Configure CORS for Vercel deployment
 const corsOptions = {
-  origin: true, // Allow any origin for debugging
+  origin: [
+    "http://localhost:8081",
+    "http://localhost:8080",
+    "http://localhost:3000",
+    "https://travel-log-f.vercel.app",
+    "https://e-commerce-f-8qn1-peyptq5x0.vercel.app",
+    "https://*.vercel.app"
+  ],
   credentials: true,
   optionsSuccessStatus: 200
 };
@@ -32,39 +39,28 @@ app.get("/api/test", (req, res) => {
 
 // Import and mount routes directly without try/catch blocks
 const authRoutes = require("./routes/auth");
-console.log("Mounting auth routes at /api/auth");
 app.use("/api/auth", authRoutes);
 
 const travelRoutes = require("./routes/travel");
-console.log("Mounting travel routes at /api/travel");
 app.use("/api/travel", travelRoutes);
 
 const aiRoutes = require("./routes/ai");
-console.log("Mounting AI routes at /api/ai");
 app.use("/api/ai", aiRoutes);
 
 const galleryRoutes = require("./routes/gallery");
-console.log("Mounting gallery routes at /api/gallery");
 app.use("/api/gallery", galleryRoutes);
 
 const reviewRoutes = require("./routes/reviews");
-console.log("Mounting review routes at /api/reviews");
 app.use("/api/reviews", reviewRoutes);
-
-// For Vercel, we need to export the app
 module.exports = app;
 
-// Only start the server if this file is run directly (not in Vercel)
 if (require.main === module) {
   const PORT = process.env.PORT || 3001;
   const MONGO_URI = process.env.MONGO_URI;
   
   // Local development MongoDB connection
   if (MONGO_URI) {
-    mongoose.connect(MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    })
+    mongoose.connect(MONGO_URI)
     .then(() => console.log(`✅ MongoDB connected`))
     .catch(err => console.error("❌ MongoDB connection error:", err));
   }

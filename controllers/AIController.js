@@ -1,11 +1,9 @@
 const { GoogleGenerativeAI } = require("@google/generative-ai");
-const connectDB = require("../db");
 
 class AIController {
   // AI Search endpoint (Gemini) - returns structured JSON array
   static async aiSearch(req, res) {
     try {
-      await connectDB();
       const { query } = req.body || {};
       const geminiKey = process.env.KEY;
 
@@ -21,7 +19,7 @@ class AIController {
       const genAI = new GoogleGenerativeAI(geminiKey);
       const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
 
-      const prompt = `You are a travel search assistant. Given a city or region name, return EXACTLY 10 interesting places in that location as a JSON array. Each item must have: "name", "description" (1-2 sentences), and "emoji" (single emoji). Use the input: ${query}. Return ONLY JSON array, no extra text.`;
+      const prompt = `You are a travel search assistant. Given a city or region name, return EXACTLY 10 interesting places in that location as a JSON array. Each item must have: "name", "description" (1-2 sentences), and "wikipediaUrl" (a Wikipedia URL for more information). Use the input: ${query}. Return ONLY JSON array, no extra text.`;
 
       const result = await model.generateContent({
         contents: [{ role: "user", parts: [{ text: prompt }] }]
@@ -56,7 +54,6 @@ class AIController {
   // AI Recommendations endpoint (Gemini only)
   static async aiRecommendations(req, res) {
     try {
-      await connectDB();
       console.log('AI Recommendations request received:', JSON.stringify(req.body, null, 2));
       const { place, duration, interests, budget } = req.body || {};
       const geminiKey = process.env.KEY;
@@ -87,11 +84,10 @@ For each recommendation, provide exactly this JSON structure:
   "itinerary": ["Day 1: ...", "Day 2: ..."],  // EXACTLY 2 items, keep very short
   "budget": "$X-Y",
   "duration": "X days",
-  "score": 85,
-  "image": "https://images.unsplash.com/photo-XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-XXXXXXXXXXXXXXXX?ixlib=rb-4.0.3&ixid=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX&auto=format&fit=crop&w=800&q=80"  // Use a destination-specific Unsplash URL
+  "score": 85
 }
 
-Return ONLY the JSON array with 3 recommendations. No other text. Keep ALL responses extremely concise. Use relevant, high-quality travel images from Unsplash that match the destination.`;
+Return ONLY the JSON array with 3 recommendations. No other text. Keep ALL responses extremely concise.`;
 
       console.log('Sending prompt to Gemini API:', prompt);
 
@@ -213,13 +209,13 @@ Return ONLY the JSON array with 3 recommendations. No other text. Keep ALL respo
               description: rec.description || 'No description available',
               itinerary: Array.isArray(rec.itinerary) ? rec.itinerary : ['Day 1: Explore the destination'],
               score: typeof rec.score === 'number' ? Math.min(100, Math.max(0, rec.score)) : 80,
-              image: rec.image && rec.image !== 'https://images.unsplash.com/photo-1518542444957-b152e47201bd?w=800'
-                ? rec.image
-                : this.getDefaultImageForDestination(rec.destination || rec.title),
               budget: rec.budget || 'Contact for pricing',
               duration: rec.duration || 'Flexible',
               title: rec.destination || rec.title || 'Travel Recommendation',
-              location: rec.location || rec.country || rec.destination?.split(', ')?.[0] || 'Unknown Location'
+              location: rec.location || rec.country || rec.destination?.split(', ')?.[0] || 'Unknown Location',
+              wikipediaUrl: rec.wikipediaUrl && typeof rec.wikipediaUrl === 'string' && rec.wikipediaUrl.startsWith('http') 
+                ? rec.wikipediaUrl 
+                : null
             };
           });
 

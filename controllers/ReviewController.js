@@ -1,11 +1,16 @@
-const connectDB = require("../db");
 const Review = require("../models/Review");
 
 class ReviewController {
   // Create
   static async createReview(req, res) {
     try {
-      await connectDB();
+      const { author, avatar, destination, rating, title, body, date } = req.body;
+      
+      // Validate required fields
+      if (!author || !destination || !rating || !title || !body) {
+        return res.status(400).json({ message: 'All fields are required' });
+      }
+
       const review = new Review({
         author: req.body.author || "Anonymous",
         avatar: req.body.avatar || null,
@@ -24,26 +29,23 @@ class ReviewController {
   }
 
   // Read all
-  static async getAllReviews(req, res) {
+  static async getReviews(req, res) {
     try {
-      await connectDB();
-      // Build query based on filters
+      const { destination, rating, sort } = req.query;
+      
+      // Build query
       const query = {};
-      
-      // Filter by destination if provided
-      if (req.query.destination) {
-        query.destination = { $regex: req.query.destination, $options: 'i' };
+      if (destination) {
+        query.destination = { $regex: destination, $options: 'i' };
       }
-      
-      // Filter by rating if provided
-      if (req.query.rating) {
-        query.rating = { $gte: parseInt(req.query.rating) };
+      if (rating) {
+        query.rating = { $gte: parseInt(rating) };
       }
       
       // Sort by newest or helpful
-      const sort = req.query.sort === 'helpful' ? { helpful: -1 } : { createdAt: -1 };
+      const sortOption = sort === 'helpful' ? { helpful: -1 } : { createdAt: -1 };
       
-      const list = await Review.find(query).sort(sort);
+      const list = await Review.find(query).sort(sortOption);
       res.json(list);
     } catch (err) {
       res.status(500).json({ message: "Failed to fetch reviews", error: err.message });
@@ -53,7 +55,6 @@ class ReviewController {
   // Increment helpful
   static async incrementHelpful(req, res) {
     try {
-      await connectDB();
       const updated = await Review.findByIdAndUpdate(
         req.params.id,
         { $inc: { helpful: 1 } },
@@ -69,9 +70,14 @@ class ReviewController {
   // Delete
   static async deleteReview(req, res) {
     try {
-      await connectDB();
-      const deleted = await Review.findByIdAndDelete(req.params.id);
-      if (!deleted) return res.status(404).json({ message: "Not found" });
+      const { id } = req.params;
+      
+      const deletedReview = await Review.findByIdAndDelete(id);
+      
+      if (!deletedReview) {
+        return res.status(404).json({ message: 'Review not found' });
+      }
+
       res.json({ message: "Deleted" });
     } catch (err) {
       res.status(400).json({ message: "Failed to delete", error: err.message });

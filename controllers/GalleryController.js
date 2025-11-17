@@ -1,7 +1,6 @@
 const User = require("../models/User");
 const Photo = require("../models/Photo");
 const Friend = require("../models/Friend");
-const connectDB = require("../db");
 
 function escapeRegExp(str = "") {
   return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -36,7 +35,6 @@ class GalleryController {
   // Photos
   static async getPhotos(req, res) {
     try {
-      await connectDB();
       const email = (req.query.email || "").toLowerCase();
       const user = await getUserByEmail(email);
       if (!user) return res.json([]);
@@ -49,7 +47,6 @@ class GalleryController {
 
   static async createPhoto(req, res) {
     try {
-      await connectDB();
       const { email, dataUrl, caption, location, tags } = req.body || {};
       if (!email || !dataUrl) return res.status(400).json({ message: "email and dataUrl required" });
       const user = await getUserByEmail(email);
@@ -77,7 +74,6 @@ class GalleryController {
 
   static async deletePhoto(req, res) {
     try {
-      await connectDB();
       const id = req.params.id;
       await Photo.deleteOne({ _id: id });
       res.json({ message: "Deleted" });
@@ -86,29 +82,51 @@ class GalleryController {
     }
   }
 
+  // GET /api/gallery/photos - Get all photos with optional filters
+  static async getAllPhotos(req, res) {
+    try {
+      const { email, limit = 12 } = req.query;
+      
+      // Build query
+      const query = {};
+      if (email) {
+        query.email = email;
+      }
+
+      const photos = await Photo.find(query).sort({ createdAt: -1 }).limit(limit);
+      res.json(photos.map(p => ({ id: String(p._id), userId: String(p.user), dataUrl: p.dataUrl, createdAt: p.createdAt })));
+    } catch (err) {
+      res.status(500).json({ message: "Error fetching photos", error: err.message });
+    }
+  }
+
   // Posts (photos formatted as posts)
   static async getPosts(req, res) {
     try {
-      await connectDB();
+      const { email } = req.query;
+      
+      // Build query
+      const query = {};
+      if (email) {
+        query.email = email;
+      }
+
       // Get all photos with their users
-      const photos = await Photo.find().sort({ createdAt: -1 }).populate('user');
+      const photos = await Photo.find(query).sort({ createdAt: -1 }).populate('user');
       const posts = photos.map(photo => photoToPost(photo, photo.user));
       res.json(posts);
     } catch (err) {
-      console.error("Error fetching posts:", err);
       res.status(500).json({ message: "Error fetching posts", error: err.message });
     }
   }
 
   static async getTrendingPosts(req, res) {
     try {
-      await connectDB();
       // Get recent photos with their users
       const photos = await Photo.find().sort({ createdAt: -1 }).limit(10).populate('user');
       const posts = photos.map(photo => photoToPost(photo, photo.user));
       res.json(posts);
     } catch (err) {
-      console.error("Error fetching trending posts:", err);
       res.status(500).json({ message: "Error fetching trending posts", error: err.message });
     }
   }
@@ -116,7 +134,6 @@ class GalleryController {
   // Friends
   static async getFriends(req, res) {
     try {
-      await connectDB();
       const email = (req.query.email || "").toLowerCase();
       const user = await getUserByEmail(email);
       if (!user) return res.json([]);
@@ -129,7 +146,6 @@ class GalleryController {
 
   static async addFriend(req, res) {
     try {
-      await connectDB();
       const { email, friendEmail } = req.body || {};
       if (!email || !friendEmail) return res.status(400).json({ message: "email and friendEmail required" });
       const user = await getUserByEmail(email);
@@ -148,7 +164,6 @@ class GalleryController {
 
   static async removeFriend(req, res) {
     try {
-      await connectDB();
       const { email, friendEmail } = req.body || {};
       const user = await getUserByEmail(email);
       const friendUser = await getUserByEmail(friendEmail);
@@ -163,7 +178,6 @@ class GalleryController {
   // Friend profile (with photos)
   static async getFriendProfile(req, res) {
     try {
-      await connectDB();
       const email = (req.query.email || "").toLowerCase();
       const user = await getUserByEmail(email);
       if (!user) return res.status(404).json({ message: "User not found" });
@@ -183,35 +197,66 @@ class GalleryController {
     res.json({ ok: true });
   }
 
-  // Get all users for search functionality
-  static async getAllUsers(req, res) {
+  // GET /api/gallery/users - Get users who have posted photos
+  static async getUsers(req, res) {
     try {
-      await connectDB();
-      const { search } = req.query;
-      let query = {};
+      // Get distinct user IDs from photos
+      const userIds = await Photo.distinct('user');
       
-      // If search query is provided, search by name or email
-      if (search) {
-        query = {
-          $or: [
-            { name: { $regex: search, $options: 'i' } },
-            { email: { $regex: search, $options: 'i' } }
-          ]
-        };
-      }
-      
-      // Get all users (excluding password field)
-      const users = await User.find(query).select('-password').limit(20);
+      // Get user details
+      const users = await User.find({
+        _id: { $in: userIds }
+      }).select('name avatar');
       
       res.json(users.map(user => ({
         id: String(user._id),
         name: user.name,
-        email: user.email,
-        avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name)}`
+        avatar: user.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(user.name)}`
       })));
     } catch (err) {
-      console.error("Error fetching users:", err);
       res.status(500).json({ message: "Error fetching users", error: err.message });
+    }
+  }
+
+  // Get all users for search functionality
+  static async getAllUsers(req, res) {
+    try {
+      const users = await User.find().select('name avatar email');
+      res.json(users);
+    } catch (err) {
+      res.status(500).json({ message: "Error fetching users", error: err.message });
+    }
+  }
+  
+  // POST /api/gallery/upload - Upload a new photo
+  static async uploadPhoto(req, res) {
+    try {
+      const { email, dataUrl, caption } = req.body;
+      
+      if (!email || !dataUrl) {
+        return res.status(400).json({ message: 'Email and image data are required' });
+      }
+      
+      const user = await getUserByEmail(email);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      const photo = await Photo.create({
+        user: user._id,
+        dataUrl,
+        caption
+      });
+      
+      res.json({
+        id: String(photo._id),
+        userId: String(photo.user),
+        dataUrl: photo.dataUrl,
+        caption: photo.caption,
+        createdAt: photo.createdAt
+      });
+    } catch (err) {
+      res.status(500).json({ message: 'Error uploading photo', error: err.message });
     }
   }
 }
