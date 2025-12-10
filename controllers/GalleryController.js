@@ -26,7 +26,7 @@ function photoToPost(photo, user) {
     tags: photo.tags && photo.tags.length > 0 ? photo.tags : ['travel', 'photo'],
     location: photo.location || 'Unknown Location',
     likes: Math.floor(Math.random() * 100),
-    comments: Math.floor(Math.random() * 20),
+    comments: Math.floor(Math.random() * 10),
     createdAt: photo.createdAt.toISOString(),
   };
 }
